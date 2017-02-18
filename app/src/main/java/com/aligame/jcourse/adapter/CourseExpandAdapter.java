@@ -1,12 +1,14 @@
 package com.aligame.jcourse.adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +18,6 @@ import android.widget.TextView;
 
 import com.aligame.jcourse.R;
 import com.aligame.jcourse.library.realm.RealmHelper;
-import com.aligame.jcourse.library.toast.ToastUtil;
 import com.aligame.jcourse.model.CourseRm;
 
 import java.io.IOException;
@@ -34,9 +35,11 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private Context context;
     private LayoutInflater mInflater;
     private List<CourseRm> mData;
+    private List<Integer[]> playStatus = new ArrayList<>();
     private MediaPlayer mediaPlayer;
     private RealmHelper mRealmHleper;
-    private int lastPos = -1;
+    private int lastGroupPos = -1;
+    private int lastChildPos = -1;
 
     private static final String BASE_PATH = "baidu/jap/audio/";
 
@@ -56,9 +59,23 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
 
         mRealmHleper = new RealmHelper(context);
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.reset();
+            }
+        });
+
+        initPlayStatus(mData);
 
         initSchedule();//播放时长显示
 
+    }
+
+    private void initPlayStatus(List<CourseRm> mData) {
+        for (int i = 0; i < mData.size(); i++) {
+            playStatus.add(new Integer[]{0, 0, 0, 0, 0});
+        }
     }
 
     @Override
@@ -72,7 +89,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
 
     private List<String> getChildren(int groupPosition) {
         List<String> parts = new ArrayList<>();
-        parts.add("1.刨根问底");
+        parts.add("1.身临其境");
         parts.add("2.顺藤摸瓜");
         parts.add("3.移花接木");
         parts.add("4.枝繁叶茂");
@@ -129,7 +146,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
             holder = new ViewHolder();
             convertView = mInflater.inflate(R.layout.course_item, null);
             holder.title = (TextView) convertView.findViewById(R.id.tv_title);
-            holder.viewBtn = (Button) convertView.findViewById(R.id.btn_play);
+            holder.playBtn = (Button) convertView.findViewById(R.id.btn_play);
             holder.time = (TextView) convertView.findViewById(R.id.tv_time);
             convertView.setTag(holder);
 
@@ -137,42 +154,82 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
         holder.title.setText(getChildren(groupPosition).get(childPosition));
-        holder.viewBtn.setOnClickListener(new View.OnClickListener() {
+        holder.playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mediaPlayer = getPlayer(groupPosition, childPosition);
+                int seek = getChild(groupPosition, childPosition) * 1000;
+                Log.d("####player", groupPosition + "_" + childPosition);
+                //同一课程内点击
                 if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    updateItemText(groupPosition, childPosition, 1);
-                } else {
-                    int seek = getChild(groupPosition, childPosition);
-                    ToastUtil.showToast(context, seek + "");
-                    mediaPlayer.seekTo(seek * 1000);
+                    //点击的是当前正在播放的part,暂停
+                    if (lastChildPos == childPosition) {
+                        mediaPlayer.pause();
+                        updatePlayStatus(groupPosition, childPosition, 0);
+                    } else {
+                        //不用停止，直接跳到指定part
+                        mediaPlayer.seekTo(seek);
+                        updatePlayStatus(groupPosition, childPosition, 1);
+                    }
+                } else if (lastGroupPos == groupPosition && lastChildPos == childPosition) {
+                    //恢复上次暂停的播放
                     mediaPlayer.start();
-                    updateItemText(groupPosition, childPosition, 0);
+                    updatePlayStatus(groupPosition, childPosition, 1);
+                } else {
+                    //开始新的播放
+                    mediaPlayer.seekTo(seek);
+                    mediaPlayer.start();
+                    updatePlayStatus(groupPosition, childPosition, 1);
                 }
+                //记住当前播放的目标
+                lastGroupPos = groupPosition;
+                lastChildPos = childPosition;
             }
+
         });
+
+//        holder.playBtn.setText(getPlayLabel(groupPosition, childPosition));
+        holder.playBtn.setBackgroundResource(getBtnImg(groupPosition, childPosition));
         holder.time.setText(getChild(groupPosition, childPosition).toString());
 
         return convertView;
     }
 
-    private void updateItemText(int groupPosition, int childPosition, int state) {
-        String play_label = "NULL";
-        if (state == 0) {
-            play_label = "PAUSE";
+    private int getBtnImg(int groupPosition, int childPosition) {
+        if (playStatus.get(groupPosition)[childPosition] == 0) {
+            return android.R.drawable.ic_media_play;
         } else {
-            play_label = "PLAY";
+            return android.R.drawable.ic_media_pause;
         }
+    }
 
+    private String getPlayLabel(int groupPosition, int childPosition) {
 
+        if (playStatus.get(groupPosition)[childPosition] == 0) {
+            return "PLAY";
+        } else {
+            return "PAUSE";
+        }
+    }
 
+    private void updatePlayStatus(int groupPosition, int childPosition, int state) {
+        //先将所有状态还原
+        for (int i = 0; i < playStatus.size(); i++) {
+            for (int j = 0; j < 4; j++) {
+                playStatus.get(i)[j] = 0;
+            }
+        }
+        playStatus.get(groupPosition)[childPosition] = state;
+        notifyDataSetInvalidated();
+    }
+
+    public void finish() {
+        this.realseMedia();
     }
 
     public final class ViewHolder {
         public TextView title;
-        public Button viewBtn;
+        public Button playBtn;
         public TextView time;
     }
 
@@ -184,7 +241,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private MediaPlayer getPlayer(int groupPosition, int childPosition) {
         String course_file = BASE_PATH + String.format("第%d课.mp3", groupPosition + 1);
         String path = Environment.getExternalStorageDirectory().getPath() + "/" + course_file;
-        if (lastPos >= 0 && lastPos == groupPosition) {
+        if (lastGroupPos >= 0 && lastGroupPos == groupPosition) {
             return mediaPlayer;
         } else {
             try {
@@ -196,7 +253,6 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
                 e.printStackTrace();
             }
         }
-        lastPos = groupPosition;
         return mediaPlayer;
     }
 
@@ -229,6 +285,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
             mediaPlayer.stop();
         }
         mediaPlayer.release();
+        mediaPlayer = null;
     }
 
     private String getTimeString(long millis) {

@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        courseExpandAdapter.realseMedia();
+        courseExpandAdapter.finish();
     }
 
     //    @Override
