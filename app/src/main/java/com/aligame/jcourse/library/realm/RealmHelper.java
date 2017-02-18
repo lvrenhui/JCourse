@@ -3,8 +3,12 @@ package com.aligame.jcourse.library.realm;
 import android.content.Context;
 
 import com.aligame.jcourse.BuildConfig;
+import com.aligame.jcourse.model.CourseRm;
+
+import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * Created by matou0289 on 2016/10/20.
@@ -13,7 +17,6 @@ import io.realm.Realm;
 public class RealmHelper {
     public static final String DB_NAME = BuildConfig.class.getPackage().getName() + ".realm";
     private Realm mRealm;
-
 
     public RealmHelper(Context context) {
 
@@ -41,39 +44,48 @@ public class RealmHelper {
 //
 //    }
 //
-//    /**
-//     * update （改）
-//     */
-//    public void updateDog(String id, String newName) {
-//        Dog dog = mRealm.where(Dog.class).equalTo("id", id).findFirst();
-//        mRealm.beginTransaction();
-//        dog.setName(newName);
-//        mRealm.commitTransaction();
-//    }
-//
-//    /**
-//     * query （查询所有）
-//     */
-//    public List<Dog> queryAllDog() {
-//        RealmResults<Dog> dogs = mRealm.where(Dog.class).findAll();
-//        /**
-//         * 对查询结果，按Id进行排序，只能对查询结果进行排序
-//         */
-//        //增序排列
-//        dogs=dogs.sort("id");
-////        //降序排列
-////        dogs=dogs.sort("id", Sort.DESCENDING);
-//        return mRealm.copyFromRealm(dogs);
-//    }
-//
-//    /**
-//     * query （根据Id（主键）查）
-//     */
-//    public Dog queryDogById(String id) {
-//        Dog dog = mRealm.where(Dog.class).equalTo("id", id).findFirst();
-//
-//        return dog;
-//    }
+
+    /**
+     * update （改）
+     */
+    public void updateCourse(int id, String title, int childPosition, int seek) {
+        CourseRm oldCourse = mRealm.where(CourseRm.class).equalTo("id", id).findFirst();
+        mRealm.beginTransaction();
+        if (oldCourse != null) {
+            oldCourse.setPart(childPosition, seek);
+        } else {
+            CourseRm newCourse = new CourseRm();
+            newCourse.id = id;
+            newCourse.title = title;
+            newCourse.setPart(childPosition, seek);
+            mRealm.copyToRealm(newCourse);
+        }
+        mRealm.commitTransaction();
+    }
+
+    /**
+     * query （查询所有）
+     */
+    public List<CourseRm> queryAll() {
+        RealmResults<CourseRm> courses = mRealm.where(CourseRm.class).findAll();
+        /**
+         * 对查询结果，按Id进行排序，只能对查询结果进行排序
+         */
+        //增序排列
+        courses = courses.sort("id");
+//        //降序排列
+//        dogs=dogs.sort("id", Sort.DESCENDING);
+        return mRealm.copyFromRealm(courses);
+    }
+
+    /**
+     * query （根据Id（主键）查）
+     */
+    public CourseRm queryById(int id) {
+        CourseRm course = mRealm.where(CourseRm.class).equalTo("id", id).findFirst();
+
+        return course;
+    }
 //
 //
 //    /**
@@ -94,13 +106,13 @@ public class RealmHelper {
 //        }
 //    }
 
-    public Realm getRealm(){
+    public Realm getRealm() {
 
         return mRealm;
     }
 
-    public void close(){
-        if (mRealm!=null){
+    public void close() {
+        if (mRealm != null) {
             mRealm.close();
         }
     }

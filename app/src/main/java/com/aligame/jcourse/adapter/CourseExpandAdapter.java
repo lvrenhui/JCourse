@@ -1,6 +1,8 @@
 package com.aligame.jcourse.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -18,6 +20,7 @@ import android.widget.TextView;
 
 import com.aligame.jcourse.R;
 import com.aligame.jcourse.library.realm.RealmHelper;
+import com.aligame.jcourse.library.toast.ToastUtil;
 import com.aligame.jcourse.model.CourseRm;
 
 import java.io.IOException;
@@ -90,10 +93,10 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
 
     private List<String> getChildren(int groupPosition) {
         List<String> parts = new ArrayList<>();
-        parts.add("1.身临其境");
-        parts.add("2.顺藤摸瓜");
-        parts.add("3.移花接木");
-        parts.add("4.枝繁叶茂");
+        parts.add("♧身临其境");
+        parts.add("♧顺藤摸瓜");
+        parts.add("♧移花接木");
+        parts.add("♧枝繁叶茂");
         return parts;
     }
 
@@ -143,7 +146,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     }
 
     private String getSeekTime(int groupPosition) {
-        if (lastGroupPos==groupPosition) {
+        if (lastGroupPos == groupPosition) {
             return play_time;
         }
         return "";
@@ -164,45 +167,40 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
         holder.title.setText(getChildren(groupPosition).get(childPosition));
-        holder.playBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mediaPlayer = getPlayer(groupPosition, childPosition);
-                int seek = getChild(groupPosition, childPosition) * 1000;
-                Log.d("####player", groupPosition + "_" + childPosition);
-                //同一课程内点击
-                if (mediaPlayer.isPlaying()) {
-                    //点击的是当前正在播放的part,暂停
-                    if (lastChildPos == childPosition) {
-                        mediaPlayer.pause();
-                        updatePlayStatus(groupPosition, childPosition, 0);
-                    } else {
-                        //不用停止，直接跳到指定part
-                        mediaPlayer.seekTo(seek);
-                        updatePlayStatus(groupPosition, childPosition, 1);
-                    }
-                } else if (lastGroupPos == groupPosition && lastChildPos == childPosition) {
-                    //恢复上次暂停的播放
-                    mediaPlayer.start();
-                    updatePlayStatus(groupPosition, childPosition, 1);
-                } else {
-                    //开始新的播放
-                    mediaPlayer.seekTo(seek);
-                    mediaPlayer.start();
-                    updatePlayStatus(groupPosition, childPosition, 1);
-                }
-                //记住当前播放的目标
-                lastGroupPos = groupPosition;
-                lastChildPos = childPosition;
-            }
+        //btn的事件也得写一遍，不然点不了
+        holder.playBtn.setOnClickListener(getOnClickListener(groupPosition, childPosition));
+        convertView.setOnClickListener(getOnClickListener(groupPosition, childPosition));
+        holder.playBtn.setOnLongClickListener(getOnLongClickListener(groupPosition, childPosition));
+        convertView.setOnLongClickListener(getOnLongClickListener(groupPosition, childPosition));
 
-        });
-
-//        holder.playBtn.setText(getPlayLabel(groupPosition, childPosition));
         holder.playBtn.setBackgroundResource(getBtnImg(groupPosition, childPosition));
         holder.time.setText(getChild(groupPosition, childPosition).toString());
 
         return convertView;
+    }
+
+    private void savePartTime(final int groupPosition, final int childPosition, final int currentPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("确认调整" + getChildren(groupPosition).get(childPosition) + "开始时间？");
+        builder.setTitle("提示");
+        builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int seek = currentPosition / 1000 - 2;//留点缓冲时间
+                        mData.get(groupPosition).setPart(childPosition, seek);
+                        notifyDataSetChanged();
+                        mRealmHleper.updateCourse(groupPosition + 1, getParentTitle(groupPosition), childPosition, seek);
+                        dialog.dismiss();
+                    }
+                }
+        );
+        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.create().show();
     }
 
     private int getBtnImg(int groupPosition, int childPosition) {
@@ -301,5 +299,63 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
                 .append(String.format("%02d", seconds));
 
         return buf.toString();
+    }
+
+    private View.OnClickListener getOnClickListener(final int groupPosition, final int childPosition)
+
+    {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaPlayer = getPlayer(groupPosition, childPosition);
+                int seek = getChild(groupPosition, childPosition) * 1000;
+                Log.d("####player", groupPosition + "_" + childPosition);
+                //同一课程内点击
+                if (mediaPlayer.isPlaying()) {
+                    //点击的是当前正在播放的part,暂停
+                    if (lastChildPos == childPosition) {
+                        mediaPlayer.pause();
+                        updatePlayStatus(groupPosition, childPosition, 0);
+                    } else {
+                        //不用停止，直接跳到指定part
+                        mediaPlayer.seekTo(seek);
+                        updatePlayStatus(groupPosition, childPosition, 1);
+                    }
+                } else if (lastGroupPos == groupPosition && lastChildPos == childPosition) {
+                    //恢复上次暂停的播放
+                    mediaPlayer.start();
+                    updatePlayStatus(groupPosition, childPosition, 1);
+                } else {
+                    //开始新的播放
+                    mediaPlayer.seekTo(seek);
+                    mediaPlayer.start();
+                    updatePlayStatus(groupPosition, childPosition, 1);
+                }
+                //记住当前播放的目标
+                lastGroupPos = groupPosition;
+                lastChildPos = childPosition;
+            }
+
+        };
+    }
+
+    private View.OnLongClickListener getOnLongClickListener(final int groupPosition, final int childPosition)
+
+    {
+        return new View.OnLongClickListener()
+
+        {
+            @Override
+            public boolean onLongClick(View v) {
+                if (!play_time.equals("") && lastGroupPos == groupPosition) {
+                    savePartTime(groupPosition, childPosition, mediaPlayer.getCurrentPosition());
+                    return true;
+                } else {
+                    return false;
+                }
+
+            }
+
+        };
     }
 }
