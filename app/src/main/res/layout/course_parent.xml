@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
     <TextView
         android:id="@+id/expand_title"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:gravity="center_vertical"
-        android:textSize="20sp"
         android:paddingLeft="40dp"
-        android:text="test"
+        android:text="test1"
+        android:textSize="20sp"
 
         />
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/seek_time"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:gravity="center_vertical"
+        android:layout_marginRight="20dp"
+        android:textColor="@color/colorAccent"
+        android:text="test2"
+        android:textSize="15sp"/>
+
+</RelativeLayout>

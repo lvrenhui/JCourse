@@ -40,6 +40,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private RealmHelper mRealmHleper;
     private int lastGroupPos = -1;
     private int lastChildPos = -1;
+    private String play_time = "";
 
     private static final String BASE_PATH = "baidu/jap/audio/";
 
@@ -134,9 +135,18 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         }
         view.setTag(R.layout.course_parent, groupPosition);
         view.setTag(R.layout.course_item, -1);
-        TextView text = (TextView) view.findViewById(R.id.expand_title);
-        text.setText(getParentTitle(groupPosition));
+        TextView title = (TextView) view.findViewById(R.id.expand_title);
+        TextView time = (TextView) view.findViewById(R.id.seek_time);
+        title.setText(getParentTitle(groupPosition));
+        time.setText(getSeekTime(groupPosition));
         return view;
+    }
+
+    private String getSeekTime(int groupPosition) {
+        if (lastGroupPos==groupPosition) {
+            return play_time;
+        }
+        return "";
     }
 
     @Override
@@ -203,15 +213,6 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         }
     }
 
-    private String getPlayLabel(int groupPosition, int childPosition) {
-
-        if (playStatus.get(groupPosition)[childPosition] == 0) {
-            return "PLAY";
-        } else {
-            return "PAUSE";
-        }
-    }
-
     private void updatePlayStatus(int groupPosition, int childPosition, int state) {
         //先将所有状态还原
         for (int i = 0; i < playStatus.size(); i++) {
@@ -259,9 +260,8 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private void mediaPlayerMonitor() {
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
-                String time = getTimeString(mediaPlayer.getCurrentPosition()) + "/" + getTimeString(mediaPlayer.getDuration());
-//                ToastUtil.showToast(context, time);
-//                notifyDataSetChanged();
+                play_time = getTimeString(mediaPlayer.getCurrentPosition()) + "/" + getTimeString(mediaPlayer.getDuration());
+                notifyDataSetChanged();
             }
         }
     }
@@ -276,7 +276,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
                     }
                 },
                 200, //initialDelay
-                200, //delay
+                1000, //delay
                 TimeUnit.MILLISECONDS);
     }
 
