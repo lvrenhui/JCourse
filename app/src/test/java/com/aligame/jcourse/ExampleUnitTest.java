@@ -12,6 +12,11 @@ import static org.junit.Assert.*;
 public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
+
+        long dur = 148373;
+        int progress = 6;
+        int seek = (int) (((double) progress / 100) * dur);
+        System.out.println(seek);
         assertEquals(4, 2 + 2);
     }
 }

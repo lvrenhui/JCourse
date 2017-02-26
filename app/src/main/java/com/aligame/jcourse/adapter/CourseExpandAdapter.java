@@ -3,7 +3,6 @@ package com.aligame.jcourse.adapter;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -19,6 +18,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.aligame.jcourse.R;
+import com.aligame.jcourse.activity.MainActivity;
 import com.aligame.jcourse.library.realm.RealmHelper;
 import com.aligame.jcourse.library.toast.ToastUtil;
 import com.aligame.jcourse.model.CourseRm;
@@ -38,12 +38,13 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private Context context;
     private LayoutInflater mInflater;
     private List<CourseRm> mData;
-    private List<Integer[]> playStatus = new ArrayList<>();
+    //    private List<Integer[]> playStatus = new ArrayList<>();
     private MediaPlayer mediaPlayer;
     private RealmHelper mRealmHleper;
     private int lastGroupPos = -1;
     private int lastChildPos = -1;
     private String play_time = "";
+    private ISeek seek_control;
 
     private static final String BASE_PATH = "baidu/jap/audio/";
 
@@ -60,6 +61,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         this.context = context;
         this.mInflater = LayoutInflater.from(context);
         this.mData = mData;
+        this.seek_control = (MainActivity) context;
 
         mRealmHleper = new RealmHelper(context);
         mediaPlayer = new MediaPlayer();
@@ -70,17 +72,17 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
             }
         });
 
-        initPlayStatus(mData);
+//        initPlayStatus(mData);
 
         initSchedule();//播放时长显示
 
     }
 
-    private void initPlayStatus(List<CourseRm> mData) {
+   /* private void initPlayStatus(List<CourseRm> mData) {
         for (int i = 0; i < mData.size(); i++) {
             playStatus.add(new Integer[]{0, 0, 0, 0, 0});
         }
-    }
+    }*/
 
     @Override
     public int getGroupCount() {
@@ -173,7 +175,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         holder.playBtn.setOnLongClickListener(getOnLongClickListener(groupPosition, childPosition));
         convertView.setOnLongClickListener(getOnLongClickListener(groupPosition, childPosition));
 
-        holder.playBtn.setBackgroundResource(getBtnImg(groupPosition, childPosition));
+//        holder.playBtn.setBackgroundResource(getBtnImg(groupPosition, childPosition));
         holder.time.setText(getChild(groupPosition, childPosition).toString());
 
         return convertView;
@@ -187,9 +189,9 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         int seek = currentPosition / 1000 - 2;//留点缓冲时间
-                        mData.get(groupPosition).setPart(childPosition, seek);
-                        notifyDataSetChanged();
+//                        mData.get(groupPosition).setPart(childPosition, seek);
                         mRealmHleper.updateCourse(groupPosition + 1, getParentTitle(groupPosition), childPosition, seek);
+                        notifyDataSetChanged();
                         dialog.dismiss();
                     }
                 }
@@ -203,15 +205,8 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         builder.create().show();
     }
 
-    private int getBtnImg(int groupPosition, int childPosition) {
-        if (playStatus.get(groupPosition)[childPosition] == 0) {
-            return android.R.drawable.ic_media_play;
-        } else {
-            return android.R.drawable.ic_media_pause;
-        }
-    }
 
-    private void updatePlayStatus(int groupPosition, int childPosition, int state) {
+    /*private void updatePlayStatus(int groupPosition, int childPosition, int state) {
         //先将所有状态还原
         for (int i = 0; i < playStatus.size(); i++) {
             for (int j = 0; j < 4; j++) {
@@ -220,10 +215,15 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         }
         playStatus.get(groupPosition)[childPosition] = state;
         notifyDataSetInvalidated();
-    }
+
+    }*/
 
     public void finish() {
         this.realseMedia();
+    }
+
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
     }
 
     public final class ViewHolder {
@@ -237,28 +237,48 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         return false;
     }
 
-    private MediaPlayer getPlayer(int groupPosition, int childPosition) {
-        String course_file = BASE_PATH + String.format("第%d课.mp3", groupPosition + 1);
-        String path = Environment.getExternalStorageDirectory().getPath() + "/" + course_file;
+    private MediaPlayer getPlayer(final int groupPosition) {
+        //显示进度条
+        seek_control.show(1);
         if (lastGroupPos >= 0 && lastGroupPos == groupPosition) {
             return mediaPlayer;
         } else {
-            try {
-                mediaPlayer.reset();
-                mediaPlayer.setDataSource(context, Uri.parse(path));
-                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mediaPlayer.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            initPlayer(groupPosition);
         }
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                initPlayer(groupPosition);
+                seek_control.reset();
+            }
+        });
         return mediaPlayer;
+    }
+
+    private void initPlayer(int groupPosition) {
+        try {
+            mediaPlayer.reset();
+            String course_file = BASE_PATH + String.format("第%d课.mp3", groupPosition + 1);
+            String path = Environment.getExternalStorageDirectory().getPath() + "/" + course_file;
+            mediaPlayer.setDataSource(context, Uri.parse(path));
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            ToastUtil.showToast(context, "播放失败，找不到对应文件！");
+            e.printStackTrace();
+        }
+
     }
 
     private void mediaPlayerMonitor() {
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
-                play_time = getTimeString(mediaPlayer.getCurrentPosition()) + "/" + getTimeString(mediaPlayer.getDuration());
+                long cur = mediaPlayer.getCurrentPosition();
+                long dur = mediaPlayer.getDuration();
+                int seek = (int) (((double) cur / dur) * 100);
+                Log.d("####", seek + "");
+                seek_control.seekTo(seek);
+                play_time = getTimeString(cur) + "/" + getTimeString(dur);
                 notifyDataSetChanged();
             }
         }
@@ -279,11 +299,11 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     }
 
     public void realseMedia() {
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
         }
-        mediaPlayer.release();
-        mediaPlayer = null;
+
     }
 
     private String getTimeString(long millis) {
@@ -307,30 +327,17 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaPlayer = getPlayer(groupPosition, childPosition);
+                mediaPlayer = getPlayer(groupPosition);
                 int seek = getChild(groupPosition, childPosition) * 1000;
-                Log.d("####player", groupPosition + "_" + childPosition);
                 //同一课程内点击
                 if (mediaPlayer.isPlaying()) {
-                    //点击的是当前正在播放的part,暂停
-                    if (lastChildPos == childPosition) {
-                        mediaPlayer.pause();
-                        updatePlayStatus(groupPosition, childPosition, 0);
-                    } else {
-                        //不用停止，直接跳到指定part
-                        mediaPlayer.seekTo(seek);
-                        updatePlayStatus(groupPosition, childPosition, 1);
-                    }
-                } else if (lastGroupPos == groupPosition && lastChildPos == childPosition) {
-                    //恢复上次暂停的播放
-                    mediaPlayer.start();
-                    updatePlayStatus(groupPosition, childPosition, 1);
+                    //不用停止，直接跳到指定part
+                    mediaPlayer.seekTo(seek);
                 } else {
-                    //开始新的播放
                     mediaPlayer.seekTo(seek);
                     mediaPlayer.start();
-                    updatePlayStatus(groupPosition, childPosition, 1);
                 }
+                seek_control.btn_to_start();
                 //记住当前播放的目标
                 lastGroupPos = groupPosition;
                 lastChildPos = childPosition;
@@ -339,9 +346,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         };
     }
 
-    private View.OnLongClickListener getOnLongClickListener(final int groupPosition, final int childPosition)
-
-    {
+    private View.OnLongClickListener getOnLongClickListener(final int groupPosition, final int childPosition) {
         return new View.OnLongClickListener()
 
         {

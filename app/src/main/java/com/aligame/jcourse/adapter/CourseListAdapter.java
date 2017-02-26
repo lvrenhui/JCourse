@@ -87,10 +87,10 @@
 //                initPlayer();
 //                currentPos = position;
 //                if (mediaPlayer.isPlaying()) {
-//                    mediaPlayer.pause();
+//                    mediaPlayer.btn_to_pause();
 //                    finalHolder.viewBtn.setText("Play");
 //                } else {
-//                    mediaPlayer.start();
+//                    mediaPlayer.btn_to_start();
 //                    finalHolder.viewBtn.setText("Pause");
 //                }
 //

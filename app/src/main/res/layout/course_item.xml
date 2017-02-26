@@ -29,8 +29,8 @@
         android:layout_height="35dp"
         android:layout_alignParentRight="true"
         android:layout_gravity="right"
+        android:background="@drawable/ic_volume_max"
         android:gravity="center_vertical"
-        android:layout_marginRight="20dp"
         />
 
 </RelativeLayout>
