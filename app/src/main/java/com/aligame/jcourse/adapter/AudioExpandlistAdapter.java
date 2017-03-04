@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * Created by lvrh on 17/2/14.
  */
 
-public class CourseExpandAdapter extends BaseExpandableListAdapter {
+public class AudioExpandlistAdapter extends BaseExpandableListAdapter {
     private Context context;
     private LayoutInflater mInflater;
     private List<CourseRm> mData;
@@ -58,7 +58,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
 
     };
 
-    public CourseExpandAdapter(AudioListFragment fragment, List<CourseRm> mData) {
+    public AudioExpandlistAdapter(AudioListFragment fragment, List<CourseRm> mData) {
         this.context = fragment.getContext();
         this.mInflater = LayoutInflater.from(context);
         this.mData = mData;

@@ -14,7 +14,7 @@ import android.widget.ExpandableListView;
 import android.widget.SeekBar;
 
 import com.aligame.jcourse.R;
-import com.aligame.jcourse.adapter.CourseExpandAdapter;
+import com.aligame.jcourse.adapter.AudioExpandlistAdapter;
 import com.aligame.jcourse.adapter.ISeek;
 import com.aligame.jcourse.library.realm.RealmHelper;
 import com.aligame.jcourse.model.CourseRm;
@@ -32,7 +32,7 @@ import java.util.List;
 
 public class AudioListFragment extends Fragment implements View.OnClickListener, ISeek {
 
-    CourseExpandAdapter courseExpandAdapter;
+    AudioExpandlistAdapter audioExpandlistAdapter;
     RealmHelper realmHelper;
     SeekBar seekBar;
     MediaPlayer mediaPlayer = null;
@@ -51,20 +51,12 @@ public class AudioListFragment extends Fragment implements View.OnClickListener,
 
         initListview(rootView);
         initSeekbar(rootView);
-        mediaPlayer = courseExpandAdapter.getMediaPlayer();
+        mediaPlayer = audioExpandlistAdapter.getMediaPlayer();
 
         seekLayout = rootView.findViewById(R.id.layout_seekbar);
         playBtn = (Button) rootView.findViewById(R.id.btn_play);
         playBtn.setOnClickListener(this);
 
-        rootView.findViewById(R.id.btn_video).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory() + "/baidu/112.wmv"), "video/*");
-                startActivity(intent);
-            }
-        });
 
         // Inflate the layout for this fragment
         return rootView;
@@ -76,7 +68,7 @@ public class AudioListFragment extends Fragment implements View.OnClickListener,
         courseListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
             public void onGroupExpand(int groupPosition) {
-                for (int i = 0; i < courseExpandAdapter.getGroupCount(); i++) {
+                for (int i = 0; i < audioExpandlistAdapter.getGroupCount(); i++) {
                     if (groupPosition != i) {
                         courseListView.collapseGroup(i);
                     }
@@ -85,8 +77,8 @@ public class AudioListFragment extends Fragment implements View.OnClickListener,
         });
         realmHelper = new RealmHelper(getContext());
         List<CourseRm> courseRmList = initData();
-        courseExpandAdapter = new CourseExpandAdapter(this, courseRmList);
-        courseListView.setAdapter(courseExpandAdapter);
+        audioExpandlistAdapter = new AudioExpandlistAdapter(this, courseRmList);
+        courseListView.setAdapter(audioExpandlistAdapter);
     }
 
     private void initSeekbar(View rootView) {
@@ -158,7 +150,7 @@ public class AudioListFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onDestroy() {
         super.onDestroy();
-        courseExpandAdapter.finish();
+        audioExpandlistAdapter.finish();
     }
 
     @Override

@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import com.aligame.jcourse.constant.VideoType;
 import com.aligame.jcourse.fragment.AudioListFragment;
 import com.aligame.jcourse.fragment.VideoListFragment;
 
@@ -25,8 +26,11 @@ public class TabFragmentPagerAdapter extends FragmentPagerAdapter {
                 ft = new AudioListFragment();
                 break;
             case 1:
+                ft = VideoListFragment.newInstance(VideoType.COURSE_LIST.getValue());
+                break;
             case 2:
-                ft = new VideoListFragment();
+            case 3:
+                ft = VideoListFragment.newInstance(VideoType.DAY_PRACTICE.getValue());
                 break;
             default:
                 ft = new AudioListFragment();

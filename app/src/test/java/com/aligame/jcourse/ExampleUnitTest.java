@@ -1,5 +1,7 @@
 package com.aligame.jcourse;
 
+import com.aligame.jcourse.constant.VideoType;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -19,4 +21,10 @@ public class ExampleUnitTest {
         System.out.println(seek);
         assertEquals(4, 2 + 2);
     }
+
+    @Test
+    public void testEnum() {
+        System.out.println(VideoType.DAY_PRACTICE.getValue());
+    }
+
 }
