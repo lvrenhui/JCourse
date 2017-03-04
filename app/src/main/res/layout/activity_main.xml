@@ -8,40 +8,77 @@
     android:orientation="vertical"
     tools:context="com.aligame.jcourse.activity.MainActivity">
 
-    <LinearLayout
-        android:id="@+id/layout_seekbar"
-        android:layout_width="match_parent"
+    <RelativeLayout
+        android:id="@+id/rl_tab"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:visibility="gone">
+        android:background="#F2F2F2">
 
-        <Button
-            android:id="@+id/btn_video"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="test video"
-            android:visibility="gone"
-            />
+        <com.aligame.jcourse.library.view.SyncHorizontalScrollView
+            android:id="@+id/mHsv"
+            android:layout_width="fill_parent"
+            android:layout_height="40dip"
+            android:fadingEdge="none"
+            android:scrollbars="none">
 
-        <SeekBar
-            android:id="@+id/seekBar"
+            <RelativeLayout
+                android:id="@+id/rl_nav"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:background="#5AB0EB">
+
+                <RadioGroup
+                    android:id="@+id/rg_nav_content"
+                    android:layout_width="fill_parent"
+                    android:layout_height="38dip"
+                    android:layout_alignParentTop="true"
+                    android:background="#F2F2F2"
+                    android:orientation="horizontal">
+                </RadioGroup>
+
+                <ImageView
+                    android:id="@+id/iv_nav_indicator"
+                    android:layout_width="1dip"
+                    android:layout_height="5dip"
+                    android:layout_alignParentBottom="true"
+                    android:background="#5AB0EB"
+                    android:contentDescription="ddd"
+                    android:scaleType="matrix"/>
+            </RelativeLayout>
+        </com.aligame.jcourse.library.view.SyncHorizontalScrollView>
+
+
+        <ImageView
+            android:id="@+id/iv_nav_left"
             android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:layout_weight="1"/>
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="aaa"
+            android:paddingBottom="1dip"
+            android:src="@drawable/ic_volume_max"
+            android:visibility="gone">
+        </ImageView>
 
-        <Button
-            android:id="@+id/btn_play"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:background="@android:drawable/ic_media_play"
-            />
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/iv_nav_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="bbb"
+            android:paddingBottom="1dip"
+            android:src="@drawable/ic_volume_max"
+            android:visibility="gone">
+        </ImageView>
+    </RelativeLayout>
 
-    <ExpandableListView
-        android:id="@+id/courseList"
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    </ExpandableListView>
+    </android.support.v4.view.ViewPager>
 
 
 </LinearLayout>

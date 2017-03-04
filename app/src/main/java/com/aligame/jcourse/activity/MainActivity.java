@@ -1,40 +1,39 @@
 package com.aligame.jcourse.activity;
 
-import android.content.Intent;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ExpandableListView;
-import android.widget.SeekBar;
+import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.TranslateAnimation;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 
 import com.aligame.jcourse.R;
-import com.aligame.jcourse.adapter.CourseExpandAdapter;
-import com.aligame.jcourse.adapter.ISeek;
-import com.aligame.jcourse.library.realm.RealmHelper;
-import com.aligame.jcourse.model.CourseRm;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
+import com.aligame.jcourse.adapter.TabFragmentPagerAdapter;
+import com.aligame.jcourse.fragment.AudioListFragment;
+import com.aligame.jcourse.fragment.VideoListFragment;
+import com.aligame.jcourse.library.view.SyncHorizontalScrollView;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+public class MainActivity extends AppCompatActivity implements AudioListFragment.OnFragmentInteractionListener, VideoListFragment.OnFragmentInteractionListener {
 
-public class MainActivity extends AppCompatActivity implements ISeek, View.OnClickListener {
-    CourseExpandAdapter courseExpandAdapter;
-    RealmHelper realmHelper;
-    SeekBar seekBar;
-    MediaPlayer mediaPlayer = null;
-    View seekLayout;
-    Button playBtn;
+    ViewPager viewPager;
+
+    private RelativeLayout rl_nav;
+    private SyncHorizontalScrollView mHsv;
+    private RadioGroup rg_nav_content;
+    private ImageView iv_nav_indicator;
+    private ImageView iv_nav_left;
+    private ImageView iv_nav_right;
+    private int indicatorWidth;
+    public static String[] tabTitle = {"课文录音", "配套视频", "每日一句", "自由练习"};    //标题
+    private LayoutInflater mInflater;
+    private int currentIndicatorLeft = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,160 +43,114 @@ public class MainActivity extends AppCompatActivity implements ISeek, View.OnCli
         //在OnCreate方法中调用下面方法，然后再使用线程，就能在uncaughtException方法中捕获到异常
 //        Thread.setDefaultUncaughtExceptionHandler(this);
 
-        initListview();
-        initSeekbar();
-        mediaPlayer = courseExpandAdapter.getMediaPlayer();
+        rl_nav = (RelativeLayout) findViewById(R.id.rl_nav);
+        mHsv = (SyncHorizontalScrollView) findViewById(R.id.mHsv);
+        rg_nav_content = (RadioGroup) findViewById(R.id.rg_nav_content);
+        iv_nav_indicator = (ImageView) findViewById(R.id.iv_nav_indicator);
+        iv_nav_left = (ImageView) findViewById(R.id.iv_nav_left);
+        iv_nav_right = (ImageView) findViewById(R.id.iv_nav_right);
 
-        seekLayout = findViewById(R.id.layout_seekbar);
-        playBtn = (Button) findViewById(R.id.btn_play);
-        playBtn.setOnClickListener(this);
+        initHeaderTab();
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        TabFragmentPagerAdapter mAdapter = new TabFragmentPagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(mAdapter);
 
-        findViewById(R.id.btn_video).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + Environment.getExternalStorageDirectory() + "/baidu/112.wmv"), "video/*");
-                startActivity(intent);
-            }
-        });
+        setListener();
 
     }
 
-    private void initListview() {
-        final ExpandableListView courseListView = (ExpandableListView) findViewById(R.id.courseList);
-        courseListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-            @Override
-            public void onGroupExpand(int groupPosition) {
-                for (int i = 0; i < courseExpandAdapter.getGroupCount(); i++) {
-                    if (groupPosition != i) {
-                        courseListView.collapseGroup(i);
-                    }
-                }
-            }
-        });
-        realmHelper = new RealmHelper(this);
-        List<CourseRm> courseRmList = initData();
-        courseExpandAdapter = new CourseExpandAdapter(this, courseRmList);
-        courseListView.setAdapter(courseExpandAdapter);
-    }
+    private void setListener() {
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
-    private void initSeekbar() {
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser == true && mediaPlayer != null) {
-                    int dur = mediaPlayer.getDuration();
-                    int seek = (int) (((double) progress / 100) * dur);
-                    if (mediaPlayer.isPlaying()) {
-                        mediaPlayer.seekTo(seek);
-                    } else if (mediaPlayer.getCurrentPosition() > 1) {
-                        mediaPlayer.seekTo(seek);
-                        mediaPlayer.start();
-                    }
-                    btn_to_start();
+            public void onPageSelected(int position) {
+
+                if (rg_nav_content != null && rg_nav_content.getChildCount() > position) {
+                    rg_nav_content.getChildAt(position).performClick();
                 }
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+            public void onPageScrolled(int arg0, float arg1, int arg2) {
 
             }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onPageScrollStateChanged(int arg0) {
 
+            }
+        });
+
+        rg_nav_content.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+                if (rg_nav_content.getChildAt(checkedId) != null) {
+
+                    TranslateAnimation animation = new TranslateAnimation(
+                            currentIndicatorLeft,
+                            rg_nav_content.getChildAt(checkedId).getLeft(), 0f, 0f);
+                    animation.setInterpolator(new LinearInterpolator());
+                    animation.setDuration(100);
+                    animation.setFillAfter(true);
+
+                    //执行位移动画
+                    iv_nav_indicator.startAnimation(animation);
+
+                    viewPager.setCurrentItem(checkedId);   //ViewPager 跟随一起 切换
+
+                    //记录当前 下标的距最左侧的 距离
+                    currentIndicatorLeft = rg_nav_content.getChildAt(checkedId).getLeft();
+
+                    mHsv.smoothScrollTo(
+                            (checkedId > 1 ? rg_nav_content.getChildAt(checkedId).getLeft() : 0) - rg_nav_content.getChildAt(2).getLeft(), 0);
+                }
             }
         });
     }
 
-    private List<CourseRm> initData() {
-        InputStream stream;
-        List<CourseRm> courseRmList = new ArrayList<>();
-        try {
-            stream = getAssets().open("course.json");
-        } catch (IOException e) {
-            return null;
+    private void initHeaderTab() {
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        indicatorWidth = dm.widthPixels / tabTitle.length;
+
+        ViewGroup.LayoutParams cursor_Params = iv_nav_indicator.getLayoutParams();
+        cursor_Params.width = indicatorWidth;// 初始化滑动下标的宽
+        iv_nav_indicator.setLayoutParams(cursor_Params);
+
+        mHsv.setSomeParam(rl_nav, iv_nav_left, iv_nav_right, this);
+
+        //获取布局填充器
+        mInflater = (LayoutInflater) this.getSystemService(LAYOUT_INFLATER_SERVICE);
+
+        //另一种方式获取
+//      LayoutInflater mInflater = LayoutInflater.from(this);
+
+        initNavigationHSV();
+    }
+
+    private void initNavigationHSV() {
+
+        rg_nav_content.removeAllViews();
+
+        for (int i = 0; i < tabTitle.length; i++) {
+
+            RadioButton rb = (RadioButton) mInflater.inflate(R.layout.nav_radiogroup_item, null);
+            rb.setId(i);
+            rb.setText(tabTitle[i]);
+            rb.setLayoutParams(new ViewGroup.LayoutParams(indicatorWidth,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
+
+            rg_nav_content.addView(rb);
         }
 
-        Gson gson = new GsonBuilder().create();
-
-        JsonElement json = new JsonParser().parse(new InputStreamReader(stream));
-
-        List<String> titles = gson.fromJson(json, new TypeToken<List<String>>() {
-        }.getType());
-
-        for (int i = 0; i < titles.size(); i++) {
-            CourseRm newCourse = new CourseRm();
-            newCourse.id = i + 1;
-            newCourse.title = titles.get(i);
-            newCourse.audio_file = "";
-            newCourse.part1_time = 10;
-            newCourse.part2_time = 20;
-            newCourse.part3_time = 30;
-            newCourse.part4_time = 40;
-
-            CourseRm dbCourse = realmHelper.queryById(i + 1);
-            if (dbCourse != null) {
-                courseRmList.add(dbCourse);
-            } else {
-                courseRmList.add(newCourse);
-            }
-        }
-        return courseRmList;
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        courseExpandAdapter.finish();
-    }
+    public void onFragmentInteraction(Uri uri) {
 
-    @Override
-    public void seekTo(int seek) {
-        seekBar.setProgress(seek);
-
-    }
-
-    @Override
-    public void show(int show) {
-        if (show == 1) {
-            seekLayout.setVisibility(View.VISIBLE);
-        } else {
-            seekLayout.setVisibility(View.GONE);
-        }
-    }
-
-    @Override
-    public void btn_to_pause() {
-        playBtn.setBackgroundResource(android.R.drawable.ic_media_play);
-    }
-
-    @Override
-    public void btn_to_start() {
-        playBtn.setBackgroundResource(android.R.drawable.ic_media_pause);
-    }
-
-    @Override
-    public void reset() {
-        playBtn.setBackgroundResource(android.R.drawable.ic_media_play);
-        seekBar.setProgress(0);
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btn_play) {
-            if (mediaPlayer != null) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
-                    btn_to_pause();
-                } else {
-                    mediaPlayer.start();
-                    btn_to_start();
-                }
-
-            }
-        }
     }
 
     //    @Override

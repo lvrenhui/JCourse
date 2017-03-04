@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.aligame.jcourse.R;
 import com.aligame.jcourse.activity.MainActivity;
+import com.aligame.jcourse.fragment.AudioListFragment;
 import com.aligame.jcourse.library.realm.RealmHelper;
 import com.aligame.jcourse.library.toast.ToastUtil;
 import com.aligame.jcourse.model.CourseRm;
@@ -57,11 +58,11 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
 
     };
 
-    public CourseExpandAdapter(Context context, List<CourseRm> mData) {
-        this.context = context;
+    public CourseExpandAdapter(AudioListFragment fragment, List<CourseRm> mData) {
+        this.context = fragment.getContext();
         this.mInflater = LayoutInflater.from(context);
         this.mData = mData;
-        this.seek_control = (MainActivity) context;
+        this.seek_control = (AudioListFragment) fragment;
 
         mRealmHleper = new RealmHelper(context);
         mediaPlayer = new MediaPlayer();
