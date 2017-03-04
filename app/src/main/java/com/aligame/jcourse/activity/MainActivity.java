@@ -16,11 +16,9 @@ import android.widget.RelativeLayout;
 
 import com.aligame.jcourse.R;
 import com.aligame.jcourse.adapter.TabFragmentPagerAdapter;
-import com.aligame.jcourse.fragment.AudioListFragment;
-import com.aligame.jcourse.fragment.VideoListFragment;
 import com.aligame.jcourse.library.view.SyncHorizontalScrollView;
 
-public class MainActivity extends AppCompatActivity implements AudioListFragment.OnFragmentInteractionListener, VideoListFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity {
 
     ViewPager viewPager;
 
@@ -54,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         TabFragmentPagerAdapter mAdapter = new TabFragmentPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mAdapter);
+        //设置缓存数量，避免切换页面时数据丢失
+        viewPager.setOffscreenPageLimit(3);
 
         setListener();
 
@@ -145,11 +145,6 @@ public class MainActivity extends AppCompatActivity implements AudioListFragment
 
             rg_nav_content.addView(rb);
         }
-
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
 
     }
 

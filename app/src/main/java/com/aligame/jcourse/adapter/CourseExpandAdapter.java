@@ -15,10 +15,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aligame.jcourse.R;
-import com.aligame.jcourse.activity.MainActivity;
 import com.aligame.jcourse.fragment.AudioListFragment;
 import com.aligame.jcourse.library.realm.RealmHelper;
 import com.aligame.jcourse.library.toast.ToastUtil;
@@ -39,7 +40,6 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     private Context context;
     private LayoutInflater mInflater;
     private List<CourseRm> mData;
-    //    private List<Integer[]> playStatus = new ArrayList<>();
     private MediaPlayer mediaPlayer;
     private RealmHelper mRealmHleper;
     private int lastGroupPos = -1;
@@ -137,14 +137,21 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
     public View getGroupView(int groupPosition, boolean isExpanded, View view, ViewGroup parent) {
         if (view == null) {
             LayoutInflater inflater = LayoutInflater.from(context);
-            view = inflater.inflate(R.layout.course_parent, null);
+            view = inflater.inflate(R.layout.course_audio_parent, null);
         }
-        view.setTag(R.layout.course_parent, groupPosition);
-        view.setTag(R.layout.course_item, -1);
+        view.setTag(R.layout.course_audio_parent, groupPosition);
+        view.setTag(R.layout.course_audio_item, -1);
         TextView title = (TextView) view.findViewById(R.id.expand_title);
         TextView time = (TextView) view.findViewById(R.id.seek_time);
         title.setText(getParentTitle(groupPosition));
         time.setText(getSeekTime(groupPosition));
+
+        ImageView parentImageViw = (ImageView) view.findViewById(R.id.image_nav);
+        if (isExpanded) {
+            parentImageViw.setBackgroundResource(R.drawable.ic_expand_bottom);
+        } else {
+            parentImageViw.setBackgroundResource(R.drawable.ic_expand_right);
+        }
         return view;
     }
 
@@ -160,7 +167,7 @@ public class CourseExpandAdapter extends BaseExpandableListAdapter {
         ViewHolder holder;
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = mInflater.inflate(R.layout.course_item, null);
+            convertView = mInflater.inflate(R.layout.course_audio_item, null);
             holder.title = (TextView) convertView.findViewById(R.id.tv_title);
             holder.playBtn = (Button) convertView.findViewById(R.id.btn_play);
             holder.time = (TextView) convertView.findViewById(R.id.tv_time);
