@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="@android:color/black"
+                android:orientation="vertical">
+
+
+    <it.sephiroth.android.library.imagezoom.ImageViewTouch
+
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"/>
+
+    <TextView
+        android:id="@+id/position_info"
+        android:layout_width="50dp"
+        android:layout_height="20dp"
+        android:layout_alignBottom="@id/imageView"
+        android:text="12/20"
+        android:textColor="@android:color/holo_red_dark"
+        />
+
+
+</RelativeLayout>
