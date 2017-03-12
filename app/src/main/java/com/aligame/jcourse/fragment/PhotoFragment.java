@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.FileProvider;
-import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +14,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import com.aligame.jcourse.R;
-import com.aligame.jcourse.adapter.ImageFragmentPagerAdapter;
+import com.aligame.jcourse.activity.GalleryActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,11 +41,12 @@ public class PhotoFragment extends Fragment implements View.OnClickListener {
         cameraBtn = (ImageButton) rootView.findViewById(R.id.btn_camera);
         cameraBtn.setOnClickListener(this);
 
-        imgPreview = (ImageView) rootView.findViewById(R.id.img_preview);
-
-        ImageFragmentPagerAdapter imageFragmentPagerAdapter = new ImageFragmentPagerAdapter(getActivity().getSupportFragmentManager());
-        ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.pager);
-        viewPager.setAdapter(imageFragmentPagerAdapter);
+//        imgPreview = (ImageView) rootView.findViewById(R.id.img_preview);
+//
+//        ControllableViewPager viewPager = (ControllableViewPager) rootView.findViewById(R.id.pager);
+//        ImagePagerAdapter pagerAdapter = new ImagePagerAdapter(getContext(), viewPager);
+//        pagerAdapter.setmData();
+//        viewPager.setAdapter(pagerAdapter);
 
         return rootView;
     }
@@ -55,6 +54,11 @@ public class PhotoFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btn_camera) {
+
+            Intent intent = new Intent(getContext(), GalleryActivity.class);
+            startActivity(intent);
+
+            /*
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
             if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
@@ -71,6 +75,7 @@ public class PhotoFragment extends Fragment implements View.OnClickListener {
                     startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
                 }
             }
+            */
         }
     }
 
@@ -98,4 +103,5 @@ public class PhotoFragment extends Fragment implements View.OnClickListener {
 //        mCurrentPhotoPath = image.getAbsolutePath();
         return image;
     }
+
 }

@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 
 import com.aligame.jcourse.R;
 import com.aligame.jcourse.adapter.VideoListAdapter;
-import com.aligame.jcourse.constant.VideoType;
 
 public class VideoListFragment extends Fragment {
 
