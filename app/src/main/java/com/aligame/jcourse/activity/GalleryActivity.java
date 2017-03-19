@@ -1,14 +1,19 @@
 package com.aligame.jcourse.activity;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
-import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 
 import com.aligame.jcourse.R;
+import com.aligame.jcourse.library.toast.ToastUtil;
 import com.aligame.jcourse.library.view.PhotoViewPager;
 import com.aligame.jcourse.library.view.PinchImageView;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
@@ -19,7 +24,7 @@ import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.LinkedList;
 
-public class GalleryActivity extends AppCompatActivity {
+public class GalleryActivity extends Activity {
     private String[] mImages = new String[]{
             "http://ww2.sinaimg.cn/mw1024/6df127bfjw1esojfinxmxj20xc18gqfm.jpg"
             , "http://ww2.sinaimg.cn/mw1024/6df127bfjw1esiveg31hwj20u00gvn18.jpg"
@@ -43,17 +48,24 @@ public class GalleryActivity extends AppCompatActivity {
             , "http://ww2.sinaimg.cn/mw1024/6df127bfjw1eqmfuizagpj218g0r9dms.jpg"
     };
 
+    PhotoViewPager pager;
+    private PopupWindow mPopupWindow;
+    RelativeLayout parentLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
 
+//        getActionBar().hide();
+
         final ImageLoader imageLoader = ImageLoader.getInstance();
         imageLoader.init(ImageLoaderConfiguration.createDefault(this));
 
-        final LinkedList<PinchImageView> viewCache = new LinkedList<>();
+        final LinkedList<View> viewCache = new LinkedList<>();
 
-        final PhotoViewPager pager = (PhotoViewPager) findViewById(R.id.pager);
+        pager = (PhotoViewPager) findViewById(R.id.pager);
+        //设置图片缓存
         pager.setOffscreenPageLimit(5);
         pager.setAdapter(new PagerAdapter() {
             @Override
@@ -68,38 +80,63 @@ public class GalleryActivity extends AppCompatActivity {
 
             @Override
             public Object instantiateItem(ViewGroup container, int position) {
+                View layoutView;
                 PinchImageView piv;
                 if (viewCache.size() > 0) {
-                    piv = viewCache.remove();
+                    layoutView = viewCache.remove();
+                    //从缓存拿出来要恢复状态
+                    piv = (PinchImageView) layoutView.findViewById(R.id.gallery_img);
                     piv.reset();
                 } else {
-                    piv = new PinchImageView(GalleryActivity.this);
+                    layoutView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.img_gallery, null);
+                    piv = (PinchImageView) layoutView.findViewById(R.id.gallery_img);
                 }
                 DisplayImageOptions options = new DisplayImageOptions.Builder().resetViewBeforeLoading(true).build();
-                imageLoader.displayImage(mImages[position], piv, options, getImageLoadingListener());
-                container.addView(piv);
-                return piv;
+                imageLoader.displayImage(mImages[position], piv, options, getImageLoadingListener(layoutView));
+
+                piv.setOnLongClickListener(getLongClick());
+                container.addView(layoutView);
+                return layoutView;
             }
 
             @Override
             public void destroyItem(ViewGroup container, int position, Object object) {
-                PinchImageView piv = (PinchImageView) object;
-                container.removeView(piv);
-                viewCache.add(piv);
+                View layout = (View) object;
+                container.removeView(layout);
+                viewCache.add(layout);
             }
 
             @Override
             public void setPrimaryItem(ViewGroup container, int position, Object object) {
-                pager.setMainPinchImageView((PinchImageView) object);
+                pager.setMainPinchImageView((PinchImageView) ((View) object).findViewById(R.id.gallery_img));
+            }
+        });
+
+        parentLayout = (RelativeLayout) findViewById(R.id.rl_parent);
+
+        initPopwindow();
+    }
+
+    private void initPopwindow() {
+        View popupView = getLayoutInflater().inflate(R.layout.layout_popup, null);
+        mPopupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        mPopupWindow.setTouchable(true);
+        mPopupWindow.setOutsideTouchable(true);
+        mPopupWindow.setBackgroundDrawable(new BitmapDrawable(getResources(), (Bitmap) null));
+
+        popupView.findViewById(R.id.btn_del).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ToastUtil.showToast(getApplicationContext(), pager.getCurrentItem() + "");
             }
         });
     }
 
-    public ImageLoadingListener getImageLoadingListener() {
+    public ImageLoadingListener getImageLoadingListener(final View layout) {
         return new ImageLoadingListener() {
             @Override
             public void onLoadingStarted(String imageUri, View view) {
-                findViewById(R.id.loading_tv).setVisibility(View.VISIBLE);
+                layout.findViewById(R.id.loading_avi).setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -109,7 +146,7 @@ public class GalleryActivity extends AppCompatActivity {
 
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                hiddeTv();
+                layout.findViewById(R.id.loading_avi).setVisibility(View.GONE);
             }
 
             @Override
@@ -119,12 +156,14 @@ public class GalleryActivity extends AppCompatActivity {
         };
     }
 
-    public void hiddeTv() {
-        new Handler().postDelayed(new Runnable() {
+    public View.OnLongClickListener getLongClick() {
+        return new View.OnLongClickListener() {
             @Override
-            public void run() {
-                findViewById(R.id.loading_tv).setVisibility(View.GONE);
+            public boolean onLongClick(View v) {
+                mPopupWindow.showAtLocation(parentLayout, Gravity.RIGHT | Gravity.BOTTOM, 0, 0);
+                return true;
             }
-        }, 500);
+        };
     }
+
 }
