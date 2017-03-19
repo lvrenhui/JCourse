@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView iv_nav_left;
     private ImageView iv_nav_right;
     private int indicatorWidth;
-    public static String[] tabTitle = {"课文录音", "配套视频", "每日一句", "自由练习"};    //标题
+    public static String[] tabTitle = {"课文录音", "配套视频", "每日一句", "配套教材"};    //标题
     private LayoutInflater mInflater;
     private int currentIndicatorLeft = 0;
 

@@ -148,9 +148,9 @@ public class AudioExpandlistAdapter extends BaseExpandableListAdapter {
 
         ImageView parentImageViw = (ImageView) view.findViewById(R.id.image_nav);
         if (isExpanded) {
-            parentImageViw.setBackgroundResource(R.drawable.ic_expand_bottom);
+            parentImageViw.setBackgroundResource(R.drawable.ic_down_arrow);
         } else {
-            parentImageViw.setBackgroundResource(R.drawable.ic_expand_right);
+            parentImageViw.setBackgroundResource(R.drawable.ic_right_arrow);
         }
         return view;
     }
